@@ -8,15 +8,13 @@ PRAGMA foreign_keys = ON;
 -- ============================================================================
 -- MASTER TABLE: Character
 -- ============================================================================
--- Represents a character with multiple equipment sets, one appearance, and one stats set
+-- Represents a character with multiple equipment sets, multiple appearances, and one stats set
 CREATE TABLE Character (
     character_id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    appearance_id INTEGER NOT NULL UNIQUE,
     stats_id INTEGER NOT NULL UNIQUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (appearance_id) REFERENCES Appearance(appearance_id),
     FOREIGN KEY (stats_id) REFERENCES Stats(stats_id)
 );
 
@@ -103,13 +101,17 @@ CREATE TABLE Eyes (
 -- ============================================================================
 -- DETAIL TABLE: Appearance
 -- ============================================================================
--- Appearance set for a character - references exactly ONE hair style and ONE eye color
+-- Appearance set for a character - a character can have MULTIPLE appearances (different looks/outfits)
+-- Each appearance references exactly ONE hair style and ONE eye color
 CREATE TABLE Appearance (
     appearance_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    character_id INTEGER NOT NULL,
+    appearance_name TEXT NOT NULL DEFAULT 'Default Appearance',
     hair_id INTEGER NOT NULL,
     eyes_id INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (character_id) REFERENCES Character(character_id),
     FOREIGN KEY (hair_id) REFERENCES Hair(hair_id),
     FOREIGN KEY (eyes_id) REFERENCES Eyes(eyes_id)
 );
@@ -134,7 +136,6 @@ CREATE TABLE Stats (
 -- INDEXES: Foreign Key Lookups and Query Optimization
 -- ============================================================================
 
-CREATE INDEX idx_character_appearance_id ON Character(appearance_id);
 CREATE INDEX idx_character_stats_id ON Character(stats_id);
 
 CREATE INDEX idx_equipment_character_id ON Equipment(character_id);
@@ -142,6 +143,7 @@ CREATE INDEX idx_equipment_armor_id ON Equipment(armor_id);
 CREATE INDEX idx_equipment_weapon_id ON Equipment(weapon_id);
 CREATE INDEX idx_equipment_cape_id ON Equipment(cape_id);
 
+CREATE INDEX idx_appearance_character_id ON Appearance(character_id);
 CREATE INDEX idx_appearance_hair_id ON Appearance(hair_id);
 CREATE INDEX idx_appearance_eyes_id ON Appearance(eyes_id);
 
@@ -213,9 +215,10 @@ END;
 --   - Equipment can have a name to distinguish loadouts (e.g., "Combat", "Social", "Stealth")
 --   - FOREIGN KEY ensures referential integrity
 --
--- Character (Master) [1] → [1] Appearance (Detail)
---   - One Character has exactly ONE Appearance
---   - UNIQUE constraint ensures strict 1:1 relationship
+-- Character (Master) [1] → [*] Appearance (Detail) — ONE-TO-MANY
+--   - One Character can have MULTIPLE Appearances (different looks/outfits)
+--   - Each Appearance references the Character via character_id FK
+--   - Appearance can have a name to distinguish looks (e.g., "Casual", "Battle Ready", "Formal")
 --   - FOREIGN KEY ensures referential integrity
 --
 -- Character (Master) [1] → [1] Stats (Detail)
@@ -240,10 +243,10 @@ END;
 --
 -- Appearance (Detail) [1] → [1] Hair (Lookup)
 --   - One Appearance references exactly ONE Hair style
---   - UNIQUE constraint ensures strict 1:1 relationship
 --   - FOREIGN KEY ensures referential integrity
+--   - Cannot be NULL
 --
 -- Appearance (Detail) [1] → [1] Eyes (Lookup)
 --   - One Appearance references exactly ONE Eye color
---   - UNIQUE constraint ensures strict 1:1 relationship
 --   - FOREIGN KEY ensures referential integrity
+--   - Cannot be NULL

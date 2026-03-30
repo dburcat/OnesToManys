@@ -1,5 +1,5 @@
 -- Sample data for SQLite Character Equipment & Appearance database
--- Now with ONE-TO-MANY relationship: Character has multiple Equipment sets
+-- Now with ONE-TO-MANY relationships: Character has multiple Equipment sets AND multiple Appearances
 
 -- ============================================================================
 -- INSERT LOOKUP DATA (Armor, Weapon, Cape, Hair, Eyes)
@@ -18,34 +18,59 @@ INSERT INTO Cape (cape_length, description) VALUES ('Short', 'Short shoulder len
 
 INSERT INTO Hair (hair_style, description) VALUES ('Long', 'Long flowing hair');
 INSERT INTO Hair (hair_style, description) VALUES ('Short', 'Short cropped hair');
+INSERT INTO Hair (hair_style, description) VALUES ('Wavy', 'Wavy medium-length hair');
 
 INSERT INTO Eyes (eye_color, description) VALUES ('Blue', 'Bright blue eyes');
 INSERT INTO Eyes (eye_color, description) VALUES ('Green', 'Green eyes');
+INSERT INTO Eyes (eye_color, description) VALUES ('Brown', 'Brown eyes');
 
 -- ============================================================================
--- INSERT CHARACTER DATA WITH APPEARANCE & STATS
+-- INSERT CHARACTER DATA WITH STATS ONLY
 -- ============================================================================
 
 -- Character 1: Sir Lancelot
-INSERT INTO Appearance (hair_id, eyes_id) VALUES (1, 1);
 INSERT INTO Stats (strength, dexterity, constitution, intelligence, wisdom, charisma) 
 VALUES (18, 14, 16, 10, 12, 15);
-INSERT INTO Character (name, appearance_id, stats_id) 
-VALUES ('Sir Lancelot', 1, 1);
+INSERT INTO Character (name, stats_id) 
+VALUES ('Sir Lancelot', 1);
 
 -- Character 2: Rogue Shadow
-INSERT INTO Appearance (hair_id, eyes_id) VALUES (2, 2);
 INSERT INTO Stats (strength, dexterity, constitution, intelligence, wisdom, charisma) 
 VALUES (12, 18, 13, 14, 16, 11);
-INSERT INTO Character (name, appearance_id, stats_id) 
-VALUES ('Shadow', 2, 2);
+INSERT INTO Character (name, stats_id) 
+VALUES ('Shadow', 2);
 
 -- Character 3: Wizard Aldor
-INSERT INTO Appearance (hair_id, eyes_id) VALUES (1, 1);
 INSERT INTO Stats (strength, dexterity, constitution, intelligence, wisdom, charisma) 
 VALUES (10, 12, 14, 18, 16, 13);
-INSERT INTO Character (name, appearance_id, stats_id) 
-VALUES ('Aldor', 3, 3);
+INSERT INTO Character (name, stats_id) 
+VALUES ('Aldor', 3);
+
+-- ============================================================================
+-- INSERT APPEARANCE DATA (1:* relationship - multiple appearances per character)
+-- ============================================================================
+
+-- Sir Lancelot has 2 appearances
+INSERT INTO Appearance (character_id, appearance_name, hair_id, eyes_id) 
+VALUES (1, 'Battle Ready', 1, 1);
+INSERT INTO Appearance (character_id, appearance_name, hair_id, eyes_id) 
+VALUES (1, 'Formal Court', 1, 1);
+
+-- Shadow has 3 appearances
+INSERT INTO Appearance (character_id, appearance_name, hair_id, eyes_id) 
+VALUES (2, 'Casual', 2, 2);
+INSERT INTO Appearance (character_id, appearance_name, hair_id, eyes_id) 
+VALUES (2, 'Disguise', 1, 3);
+INSERT INTO Appearance (character_id, appearance_name, hair_id, eyes_id) 
+VALUES (2, 'Shadow Form', 2, 2);
+
+-- Aldor has 3 appearances
+INSERT INTO Appearance (character_id, appearance_name, hair_id, eyes_id) 
+VALUES (3, 'Research Mode', 3, 1);
+INSERT INTO Appearance (character_id, appearance_name, hair_id, eyes_id) 
+VALUES (3, 'Battle Mage', 1, 1);
+INSERT INTO Appearance (character_id, appearance_name, hair_id, eyes_id) 
+VALUES (3, 'Formal Wizard', 1, 3);
 
 -- ============================================================================
 -- INSERT EQUIPMENT DATA (1:* relationship - multiple equipment per character)
