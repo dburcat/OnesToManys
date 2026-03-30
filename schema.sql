@@ -1,5 +1,5 @@
 -- SQLite Master-Detail Database Schema
--- Character Equipment & Appearance System with Full Relationships
+-- Character Equipment & Appearance System with ONE-TO-MANY Equipment
 -- Created: March 30, 2026
 
 -- Enable foreign key constraints
@@ -8,16 +8,14 @@ PRAGMA foreign_keys = ON;
 -- ============================================================================
 -- MASTER TABLE: Character
 -- ============================================================================
--- Represents a character with one equipment set, one appearance, and one stats set
+-- Represents a character with multiple equipment sets, one appearance, and one stats set
 CREATE TABLE Character (
     character_id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
-    equipment_id INTEGER NOT NULL UNIQUE,
     appearance_id INTEGER NOT NULL UNIQUE,
     stats_id INTEGER NOT NULL UNIQUE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (equipment_id) REFERENCES Equipment(equipment_id),
     FOREIGN KEY (appearance_id) REFERENCES Appearance(appearance_id),
     FOREIGN KEY (stats_id) REFERENCES Stats(stats_id)
 );
@@ -61,14 +59,18 @@ CREATE TABLE Cape (
 -- ============================================================================
 -- DETAIL TABLE: Equipment
 -- ============================================================================
--- Equipment set for a character - references exactly ONE armor, ONE weapon, ONE cape
+-- Equipment set for a character - a character can have MULTIPLE equipment sets (loadouts)
+-- Each equipment set references exactly ONE armor, ONE weapon, ONE cape
 CREATE TABLE Equipment (
     equipment_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    character_id INTEGER NOT NULL,
+    equipment_name TEXT NOT NULL DEFAULT 'Default Loadout',
     armor_id INTEGER NOT NULL,
     weapon_id INTEGER NOT NULL,
     cape_id INTEGER NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (character_id) REFERENCES Character(character_id),
     FOREIGN KEY (armor_id) REFERENCES Armor(armor_id),
     FOREIGN KEY (weapon_id) REFERENCES Weapon(weapon_id),
     FOREIGN KEY (cape_id) REFERENCES Cape(cape_id)
@@ -132,10 +134,10 @@ CREATE TABLE Stats (
 -- INDEXES: Foreign Key Lookups and Query Optimization
 -- ============================================================================
 
-CREATE INDEX idx_character_equipment_id ON Character(equipment_id);
 CREATE INDEX idx_character_appearance_id ON Character(appearance_id);
 CREATE INDEX idx_character_stats_id ON Character(stats_id);
 
+CREATE INDEX idx_equipment_character_id ON Equipment(character_id);
 CREATE INDEX idx_equipment_armor_id ON Equipment(armor_id);
 CREATE INDEX idx_equipment_weapon_id ON Equipment(weapon_id);
 CREATE INDEX idx_equipment_cape_id ON Equipment(cape_id);
@@ -205,9 +207,10 @@ END;
 -- MASTER-DETAIL RELATIONSHIP DOCUMENTATION
 -- ============================================================================
 -- 
--- Character (Master) [1] → [1] Equipment (Detail)
---   - One Character has exactly ONE Equipment set
---   - UNIQUE constraint ensures strict 1:1 relationship
+-- Character (Master) [1] → [*] Equipment (Detail) — ONE-TO-MANY
+--   - One Character can have MULTIPLE Equipment sets (different loadouts)
+--   - Each Equipment references the Character via character_id FK
+--   - Equipment can have a name to distinguish loadouts (e.g., "Combat", "Social", "Stealth")
 --   - FOREIGN KEY ensures referential integrity
 --
 -- Character (Master) [1] → [1] Appearance (Detail)

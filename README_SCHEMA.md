@@ -2,36 +2,38 @@
 
 ## Overview
 
-This database implements a **complete master-detail architecture** for managing RPG characters with their equipment, appearance, and ability scores. The schema enforces strict one-to-one relationships:
+This database implements a **two-tier master-detail architecture** for managing RPG characters with multiple equipment loadouts, single appearance, and fixed ability scores:
 
 - **Master: Character** — the root entity containing a character name
 - **Details:**
-  - **Equipment** — one equipment set per character (references exactly one Armor, one Weapon, one Cape)
-  - **Appearance** — one appearance profile per character (references exactly one Hair style, one Eye color)
-  - **Stats** — one ability score set per character (Str, Dex, Con, Int, Wis, Cha)
-- **Lookup Tables** — Armor, Weapon, Cape, Hair, Eyes (reference data that can be shared across characters)
+  - **Equipment** — **[ONE-TO-MANY]** multiple equipment sets per character (each references one Armor, one Weapon, one Cape)
+  - **Appearance** — [1:1] one appearance profile per character (references one Hair style, one Eye color)
+  - **Stats** — [1:1] one ability score set per character (Str, Dex, Con, Int, Wis, Cha)
+- **Lookup Tables** — Armor, Weapon, Cape, Hair, Eyes (reference data that can be shared across characters and equipment sets)
 
 ## Master-Detail Relationships
 
-### Character → Equipment → {Armor, Weapon, Cape}
+### Character → Equipment (ONE-TO-MANY) ⭐ New!
 
 **Master: Character**
 - Root entity. Each character has a unique identity and name.
-- One-to-one relationship with Equipment, Appearance, and Stats (enforced by UNIQUE constraints).
+- One-to-many relationship with Equipment (character can have multiple loadouts)
+- One-to-one relationship with Appearance and Stats (enforced by UNIQUE constraints)
 
-**Detail: Equipment**
-- Stores one character's equipment set
+**Detail: Equipment** [Supports Multiple Records Per Character]
+- Stores a character's equipment set/loadout
+- Each equipment set has a descriptive name (e.g., "Combat", "Stealth", "Social", "Ceremonial")
 - **References exactly ONE each of:**
   - **Armor** — one specific armor type (Heavy, Medium, Light, etc.)
   - **Weapon** — one specific weapon type (Sword, GreatSword, Spear, etc.)
   - **Cape** — one specific cape length (Long, Short, etc.)
-- Cannot be NULL (all three references are required)
-- CASCADE: Deleting Equipment would cascade if Character had ON DELETE CASCADE, but Character UNIQUE ensures 1:1
+- All foreign keys are NOT NULL (equipment cannot be incomplete)
 
 **Key Properties:**
-- Equipment always has exactly one armor, weapon, and cape
-- Armor/Weapon/Cape tables are shared lookups (multiple characters can have the same armor type)
-- Type safety through foreign keys to lookup tables
+- **character_id** is NOT NULL, allowing multiple Equipment records per Character
+- Each Equipment has a unique combination of armor_id, weapon_id, cape_id
+- Armor/Weapon/Cape tables are shared lookups (multiple equipment sets can use the same armor type)
+- Example: Sir Lancelot can have a "Combat" loadout (Heavy Armor, Sword, Long Cape) AND a "Ceremonial" loadout (Medium Armor, Sword, Long Cape)
 
 ### Character → Appearance → {Hair, Eyes}
 
@@ -45,7 +47,7 @@ This database implements a **complete master-detail architecture** for managing 
 **Key Properties:**
 - Appearance always has exactly one hair style and one eye color
 - Hair/Eyes tables are shared lookups (multiple characters can have the same hair style or eye color)
-- Each appearance is unique to one character (UNIQUE constraint on appearance_id in Character)
+- Each character has exactly ONE appearance (UNIQUE constraint on appearance_id in Character)
 
 ### Character → Stats
 
@@ -92,10 +94,11 @@ This database implements a **complete master-detail architecture** for managing 
 
 ### Query Optimization
 - **Foreign key indexes** created on:
-  - Character.equipment_id, Character.appearance_id, Character.stats_id
+  - Equipment.character_id (for fast lookup of all equipment by character) ⭐
+  - Character.appearance_id, Character.stats_id
   - Equipment.armor_id, Equipment.weapon_id, Equipment.cape_id
   - Appearance.hair_id, Appearance.eyes_id
-- Indexes speed up JOIN operations for retrieving character details
+- Indexes speed up JOIN operations for retrieving character details and multiple equipment sets
 
 ## Table Reference
 
@@ -104,16 +107,17 @@ This database implements a **complete master-detail architecture** for managing 
 |--------|------|-------------|-------|
 | character_id | INTEGER | PRIMARY KEY AUTOINCREMENT | Unique identifier |
 | name | TEXT | NOT NULL | Character name |
-| equipment_id | INTEGER | NOT NULL UNIQUE, FK→Equipment | One equipment set per character |
 | appearance_id | INTEGER | NOT NULL UNIQUE, FK→Appearance | One appearance per character |
 | stats_id | INTEGER | NOT NULL UNIQUE, FK→Stats | One stats set per character |
 | created_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | Creation timestamp |
 | updated_at | DATETIME | DEFAULT CURRENT_TIMESTAMP | Last modification timestamp |
 
-### Equipment (Detail)
+### Equipment (Detail) [ONE-TO-MANY]
 | Column | Type | Constraints | Notes |
 |--------|------|-------------|-------|
 | equipment_id | INTEGER | PRIMARY KEY AUTOINCREMENT | Unique identifier |
+| character_id | INTEGER | NOT NULL, FK→Character | Links to character (allows multiple equipment per character) ⭐ |
+| equipment_name | TEXT | NOT NULL DEFAULT 'Default Loadout' | Name of this equipment set (e.g., "Combat", "Stealth", "Social") |
 | armor_id | INTEGER | NOT NULL, FK→Armor | References one armor type |
 | weapon_id | INTEGER | NOT NULL, FK→Weapon | References one weapon type |
 | cape_id | INTEGER | NOT NULL, FK→Cape | References one cape length |
@@ -189,52 +193,77 @@ This database implements a **complete master-detail architecture** for managing 
 
 ## Example Queries
 
-### 1. Get a Single Character with All Details
+### 1. Get a Single Character with ALL Their Equipment Loadouts ⭐
 ```sql
+-- Show one character with ALL their equipment sets
 SELECT c.character_id, c.name, 
-       e.equipment_id, a.armor_type, w.weapon_type, cp.cape_length,
-       ap.appearance_id, h.hair_style, ey.eye_color,
-       s.strength, s.dexterity, s.constitution, s.intelligence, s.wisdom, s.charisma
+       e.equipment_id, e.equipment_name,
+       a.armor_type, w.weapon_type, cp.cape_length
 FROM Character c
-JOIN Equipment e ON c.equipment_id = e.equipment_id
+JOIN Equipment e ON c.character_id = e.character_id
 JOIN Armor a ON e.armor_id = a.armor_id
 JOIN Weapon w ON e.weapon_id = w.weapon_id
 JOIN Cape cp ON e.cape_id = cp.cape_id
-JOIN Appearance ap ON c.appearance_id = ap.appearance_id
-JOIN Hair h ON ap.hair_id = h.hair_id
-JOIN Eyes ey ON ap.eyes_id = ey.eyes_id
-JOIN Stats s ON c.stats_id = s.stats_id
-WHERE c.character_id = 1;
+WHERE c.character_id = 1
+ORDER BY e.equipment_id;
 ```
 
-### 2. Get All Characters with Summary (Equipment + Appearance + Ability Scores)
+### 2. Get Character Summary with Equipment Count ⭐
 ```sql
+-- Count how many equipment sets each character has
 SELECT c.character_id, c.name, 
-       a.armor_type, w.weapon_type, cp.cape_length,
+       COUNT(e.equipment_id) as equipment_count,
        h.hair_style, ey.eye_color,
        (s.strength + s.dexterity + s.constitution + s.intelligence + s.wisdom + s.charisma) as total_stats
 FROM Character c
-JOIN Equipment e ON c.equipment_id = e.equipment_id
-JOIN Armor a ON e.armor_id = a.armor_id
-JOIN Weapon w ON e.weapon_id = w.weapon_id
-JOIN Cape cp ON e.cape_id = cp.cape_id
+JOIN Equipment e ON c.character_id = e.character_id
 JOIN Appearance ap ON c.appearance_id = ap.appearance_id
 JOIN Hair h ON ap.hair_id = h.hair_id
 JOIN Eyes ey ON ap.eyes_id = ey.eyes_id
 JOIN Stats s ON c.stats_id = s.stats_id
+GROUP BY c.character_id, c.name
 ORDER BY c.character_id;
 ```
 
-### 3. Find Characters with Specific Equipment
+### 3. Find All Characters with a Specific Loadout Name
 ```sql
-SELECT c.character_id, c.name, a.armor_type
+SELECT c.character_id, c.name, e.equipment_name, a.armor_type, w.weapon_type
 FROM Character c
-JOIN Equipment e ON c.equipment_id = e.equipment_id
+JOIN Equipment e ON c.character_id = e.character_id
 JOIN Armor a ON e.armor_id = a.armor_id
-WHERE a.armor_type = 'Heavy';
+JOIN Weapon w ON e.weapon_id = w.weapon_id
+WHERE e.equipment_name = 'Combat';
 ```
 
-### 4. Find Characters with High Ability Scores
+### 4. Find Characters with Heavy Armor in ANY Loadout
+```sql
+-- One character might have Heavy armor in "Combat" but Medium in "Social"
+SELECT DISTINCT c.character_id, c.name, a.armor_type
+FROM Character c
+JOIN Equipment e ON c.character_id = e.character_id
+JOIN Armor a ON e.armor_id = a.armor_id
+WHERE a.armor_type = 'Heavy'
+ORDER BY c.character_id;
+```
+
+### 5. Compare Character Loadouts (All Equipment for One Character)
+```sql
+SELECT 
+  c.name,
+  e.equipment_name,
+  a.armor_type as armor,
+  w.weapon_type as weapon,
+  cp.cape_length as cape
+FROM Character c
+JOIN Equipment e ON c.character_id = e.character_id
+JOIN Armor a ON e.armor_id = a.armor_id
+JOIN Weapon w ON e.weapon_id = w.weapon_id
+JOIN Cape cp ON e.cape_id = cp.cape_id
+WHERE c.character_id = 2
+ORDER BY e.equipment_name;
+```
+
+### 6. Find Characters with High Ability Scores
 ```sql
 SELECT c.character_id, c.name, s.strength, s.dexterity, s.constitution
 FROM Character c
@@ -243,7 +272,7 @@ WHERE s.strength > 15 OR s.dexterity > 15
 ORDER BY s.strength DESC, s.dexterity DESC;
 ```
 
-### 5. List All Available Equipment Variants (Lookup Data)
+### 7. List All Available Equipment Variants (Lookup Data)
 ```sql
 SELECT 'Armor' as type, armor_type as variant_name, description FROM Armor
 UNION ALL
@@ -253,40 +282,53 @@ SELECT 'Cape', cape_length, description FROM Cape
 ORDER BY type, variant_name;
 ```
 
-### 6. Count Characters by Armor Type
+### 8. Most Common Equipment Combinations
 ```sql
-SELECT a.armor_type, COUNT(c.character_id) as character_count
-FROM Character c
-JOIN Equipment e ON c.equipment_id = e.equipment_id
+-- Find the most frequently used armor-weapon combinations across all loadouts
+SELECT a.armor_type, w.weapon_type, COUNT(*) as usage_count
+FROM Equipment e
 JOIN Armor a ON e.armor_id = a.armor_id
-GROUP BY a.armor_type
-ORDER BY character_count DESC;
+JOIN Weapon w ON e.weapon_id = w.weapon_id
+GROUP BY a.armor_type, w.weapon_type
+ORDER BY usage_count DESC;
 ```
 
-### 7. Find Most Popular Hair/Eye Combinations
+### 9. Find Most Popular Hair/Eye Combinations
 ```sql
-SELECT h.hair_style, ey.eye_color, COUNT(c.character_id) as count
+SELECT h.hair_style, ey.eye_color, COUNT(c.character_id) as character_count
 FROM Character c
 JOIN Appearance ap ON c.appearance_id = ap.appearance_id
 JOIN Hair h ON ap.hair_id = h.hair_id
 JOIN Eyes ey ON ap.eyes_id = ey.eyes_id
 GROUP BY h.hair_style, ey.eye_color
-ORDER BY count DESC;
+ORDER BY character_count DESC;
 ```
 
-### 8. Test Referential Integrity (Orphaned Record Test)
+### 10. Test Referential Integrity (Orphaned Record Test)
 ```sql
 -- This will FAIL (as intended) because armor_id=999 doesn't exist
-INSERT INTO Equipment (armor_id, weapon_id, cape_id) VALUES (999, 1, 1);
+INSERT INTO Equipment (character_id, armor_id, weapon_id, cape_id) VALUES (1, 999, 1, 1);
 -- Error: FOREIGN KEY constraint failed
 ```
 
-### 9. Check Character Modification Times
+### 11. Show Total Equipment Sets per Character
 ```sql
-SELECT character_id, name, created_at, updated_at,
-       CAST((julianday(updated_at) - julianday(created_at)) * 24 * 60 as INTEGER) as minutes_since_creation
-FROM Character
-ORDER BY updated_at DESC;
+SELECT c.character_id, c.name, COUNT(e.equipment_id) as total_loadouts
+FROM Character c
+LEFT JOIN Equipment e ON c.character_id = e.character_id
+GROUP BY c.character_id, c.name
+ORDER BY total_loadouts DESC, c.name;
+```
+
+### 12. Check Equipment and Character Modification Times
+```sql
+SELECT c.character_id, c.name, c.updated_at as character_updated,
+       COUNT(e.equipment_id) as equipment_count,
+       MAX(e.updated_at) as latest_equipment_update
+FROM Character c
+LEFT JOIN Equipment e ON c.character_id = e.character_id
+GROUP BY c.character_id
+ORDER BY c.updated_at DESC;
 ```
 
 ### 10. List All Lookup Values with Usage Count
@@ -308,34 +350,37 @@ GROUP BY eye_color
 ORDER BY type, use_count DESC;
 ```
 
-## Phase 1 Implementation Checklist
+## Phase 1 Implementation Checklist ⭐ Updated for 1:*
 
-- [x] **Master-Detail Hierarchy** — Character → Equipment/Appearance/Stats
-  - [x] Character table with UNIQUE constraints on equipment_id, appearance_id, stats_id
-  - [x] Equipment detail table with NOT NULL FKs to Armor/Weapon/Cape
-  - [x] Appearance detail table with NOT NULL FKs to Hair/Eyes
-  - [x] Stats detail table with all 6 ability scores
+- [x] **Master-Detail Hierarchy** — Character → [Multiple Equipment] / Appearance / Stats
+  - [x] Character table (no equipment_id; it's now in Equipment table)
+  - [x] Equipment detail table with NOT NULL character_id (supports multiple equipment per character) ⭐
+  - [x] Equipment has equipment_name to distinguish loadouts ("Combat", "Stealth", etc.)
+  - [x] Equipment table with NOT NULL FKs to Armor/Weapon/Cape
+  - [x] Appearance detail table with NOT NULL FKs to Hair/Eyes (still 1:1)
+  - [x] Stats detail table with all 6 ability scores (still 1:1)
   
 - [x] **Lookup Tables** — Armor, Weapon, Cape, Hair, Eyes
   - [x] Each stores single variant name (armor_type, weapon_type, cape_length, hair_style, eye_color)
-  - [x] Shareable across characters (no UNIQUE constraints)
+  - [x] Shareable across characters AND equipment sets (no UNIQUE constraints)
   
 - [x] **Foreign Key Constraints** — Referential Integrity
   - [x] PRAGMA foreign_keys = ON in schema
-  - [x] All detail/equipment FKs are NOT NULL (cannot create orphaned records)
+  - [x] Equipment.character_id NOT NULL (links back to Character)
+  - [x] All armor/weapon/cape FKs are NOT NULL (cannot create incomplete equipment)
   - [x] Foreign key violations raise errors (no silent failures)
   
 - [x] **Timestamps** — Audit Trail
-  - [x] created_at and updated_at on all tables
+  - [x] created_at and updated_at on all tables including Equipment
   - [x] Auto-update triggers for updated_at
   
 - [x] **Indexes** — Query Performance
-  - [x] Indexes on all foreign key columns for fast JOINs
+  - [x] Indexes on Equipment.character_id (for fast lookup of all equipment by character) ⭐
 
 ### Next Steps for Phase 2
 
 1. **REST API Endpoints** — CRUD operations for Character, Equipment, Appearance, Stats
-   - GET /characters — list all
+   - GET /characters — list all (with equipment count)
    - GET /characters/{id} — get full character with all details
    - POST /characters — create new character
    - PUT /characters/{id} — update character
@@ -454,26 +499,29 @@ LIMIT 5;"
                             CHARACTER (Master)
                             ├── character_id (PK)
                             ├── name
-                            └── UNIQUE: equipment_id, appearance_id, stats_id
+                            └── UNIQUE: appearance_id, stats_id
 
-                         /          |          \
-                        /           |           \
-         EQUIPMENT      /    APPEARANCE      STATS
-         (Detail)      /      (Detail)       (Detail)
-         ├── armor_id (FK)   ├── hair_id (FK)    ├── strength
-         ├── weapon_id (FK)  ├── eyes_id (FK)    ├── dexterity
-         └── cape_id (FK)    └─ columns         ├── constitution
-                                                 ├── intelligence
-              /|\                /|\               ├── wisdom
-             / | \              / | \              └── charisma
-            /  |  \            /  |  \
-       ARMOR WEAPON CAPE  HAIR EYES  (Lookup)
-       (Lookup tables shared across characters)
+                    /                    |                    \
+                   /                     |                     \
+         EQUIPMENT [1:*]     APPEARANCE [1:1]              STATS [1:1]
+         (Multiple Loadouts)  (Detail)                     (Detail)
+         ├── character_id★    ├── hair_id (FK)            ├── strength
+         ├── equipment_name   ├── eyes_id (FK)            ├── dexterity
+         ├── armor_id (FK)    └─ columns                  ├── constitution
+         ├── weapon_id (FK)                                ├── intelligence
+         └── cape_id (FK)     /|\                          ├── wisdom
+                             / | \                         └── charisma
+              /|\      /|\  /  |  \
+             / | \    / | \/   |   \
+        ARMOR WEAPON CAPE HAIR EYES  (Lookup tables)
+        (Shared across characters and equipment sets)
+
+★ character_id enables the 1:* relationship (multiple equipment per character)
 ```
 
 ---
 
-**Database Version:** 2.0 (Character-centric)  
+**Database Version:** 3.0 (One-to-Many Equipment)  
 **Created:** March 30, 2026  
 **SQLite Version:** 3.x+  
 **Target Platform:** Phase 1-3 ListDetails Web Application (OnesToManys)
