@@ -1,0 +1,16 @@
+.DS_Store
+.idea/
+*.iml
+.vscode
+__pycache__
+*pyc
+*.ipynb_checkpoints
+LLMTESTTRY/
+venv/
+.venv/
+env/
+.env
+*.env
+*.sqlite3
+*.log
+*.db
