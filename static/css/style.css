@@ -32,6 +32,13 @@ header {
     position: relative;
 }
 
+header .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
 header::before {
     content: '';
     position: absolute;
@@ -374,6 +381,33 @@ form button:active {
     transform: scale(0.98);
 }
 
+.btn-shutdown {
+    background: linear-gradient(135deg, #6d3a3a 0%, #8d4a4a 100%);
+    color: #ffcccc;
+    padding: 10px 16px;
+    border: 2px solid #9d5a5a;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-family: 'Arial', sans-serif;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
+}
+
+.btn-shutdown:hover {
+    background: linear-gradient(135deg, #8d4a4a 0%, #ad5a5a 100%);
+    border-color: #ffcccc;
+    box-shadow: 0 0 12px rgba(157, 90, 90, 0.4), 0 2px 4px rgba(0, 0, 0, 0.4);
+    transform: scale(1.05);
+}
+
+.btn-shutdown:active {
+    transform: scale(0.98);
+}
+
 .empty-message {
     text-align: center;
     padding: 30px;
@@ -504,6 +538,12 @@ form button:active {
 @media (max-width: 768px) {
     header h1 {
         font-size: 2em;
+    }
+    
+    header .header-content {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
     }
     
     .tabs {

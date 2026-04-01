@@ -2,6 +2,39 @@
 const API_URL = 'http://localhost:8000/api';
 
 // ============================================
+// WATCHDOG - AUTO SHUTDOWN ON PAGE CLOSE
+// ============================================
+
+window.addEventListener('beforeunload', async (e) => {
+    // Attempt to shutdown server when page is closed
+    try {
+        fetch(`${API_URL}/shutdown`, { method: 'POST' }).catch(err => {
+            // Ignore errors during shutdown
+        });
+    } catch (error) {
+        // Ignore errors
+    }
+});
+
+// Shutdown function for manual server stop
+async function shutdownServer() {
+    if (!confirm('Are you sure you want to stop the server? This will close the application.')) {
+        return;
+    }
+    
+    try {
+        await fetch(`${API_URL}/shutdown`, { method: 'POST' });
+        alert('Server is shutting down...');
+        setTimeout(() => {
+            window.close();
+        }, 500);
+    } catch (error) {
+        console.error('Error shutting down server:', error);
+        alert('Error shutting down server');
+    }
+}
+
+// ============================================
 // TAB SWITCHING
 // ============================================
 
