@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ListDetails - Character Equipment Manager</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ListDetails</h1>
+            <p>Character Equipment Management</p>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="characters">Characters</button>
+            <button class="tab-btn" data-tab="equipment">Equipment</button>
+            <button class="tab-btn" data-tab="relationships">Relationships</button>
+        </nav>
+
+        <!-- Characters Tab -->
+        <section id="characters" class="tab-content active">
+            <h2>Characters</h2>
+            
+            <!-- Create Character Form -->
+            <div class="form-section">
+                <h3>Add New Character</h3>
+                <form id="characterForm">
+                    <input type="text" id="charName" placeholder="Character Name" required>
+                    <input type="number" id="charAge" placeholder="Age" required>
+                    <button type="submit">Create Character</button>
+                </form>
+            </div>
+
+            <!-- Characters List -->
+            <div id="charactersList" class="list-section">
+                <h3>All Characters</h3>
+                <div id="charactersContainer">
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Equipment Tab -->
+        <section id="equipment" class="tab-content">
+            <h2>Equipment</h2>
+            
+            <!-- Create Equipment Form -->
+            <div class="form-section">
+                <h3>Add New Equipment</h3>
+                <form id="equipmentForm">
+                    <select id="equipCharacterId" required>
+                        <option value="">Select Character</option>
+                    </select>
+                    <input type="text" id="equipPiece" placeholder="Piece (Sword, Helmet, etc.)" required>
+                    <input type="text" id="equipName" placeholder="Equipment Name" required>
+                    <input type="number" id="equipStat" placeholder="Stat Value" required>
+                    <input type="text" id="equipRarity" placeholder="Rarity" required>
+                    <input type="number" id="equipWorth" placeholder="Worth" required>
+                    <input type="text" id="equipDescription" placeholder="Description" required>
+                    <button type="submit">Create Equipment</button>
+                </form>
+            </div>
+
+            <!-- Equipment List -->
+            <div id="equipmentList" class="list-section">
+                <h3>All Equipment</h3>
+                <div id="equipmentContainer">
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Relationships Tab -->
+        <section id="relationships" class="tab-content">
+            <h2>Character Equipment</h2>
+            <div id="relationshipsContainer">
+                <p>Loading...</p>
+            </div>
+        </section>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

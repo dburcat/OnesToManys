@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from database import engine, Base
 from app.models import Character, Equipment
 from app.routes import router
@@ -23,22 +25,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Include all routes
 app.include_router(router)
 
-# Root endpoint
-@app.get("/")
+# Root endpoint - serve frontend
+@app.get("/", response_class=FileResponse)
 def read_root():
-    """Root endpoint - API info."""
-    return {
-        "message": "ListDetails API",
-        "docs": "/docs",
-        "redoc": "/redoc",
-        "endpoints": {
-            "characters": "/api/characters",
-            "equipment": "/api/equipment"
-        }
-    }
+    """Serve the frontend HTML."""
+    return "templates/index.html"
 
 # Run the server
 if __name__ == "__main__":
