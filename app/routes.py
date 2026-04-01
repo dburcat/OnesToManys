@@ -10,9 +10,9 @@ router = APIRouter(prefix="/api", tags=["api"])
 # ============================================
 
 # GET all characters
-@router.get("/characters", response_model=list[schemas.Character])
+@router.get("/characters", response_model=list[schemas.CharacterWithEquipment])
 def get_characters(db: Session = Depends(get_db)):
-    """Get all characters."""
+    """Get all characters with their equipment."""
     characters = db.query(models.Character).all()
     return characters
 
