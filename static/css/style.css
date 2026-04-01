@@ -347,6 +347,33 @@ form button:active {
     transform: scale(0.98);
 }
 
+.btn-edit {
+    background: linear-gradient(135deg, #3d4e7f 0%, #5d6eaf 100%);
+    color: #7a9cc8;
+    padding: 8px 14px;
+    border: 2px solid #0088bb;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-family: 'Arial', sans-serif;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.btn-edit:hover {
+    background: linear-gradient(135deg, #5d6eaf 0%, #7d8ecf 100%);
+    border-color: #0088bb;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(93, 110, 175, 0.4), 0 2px 4px rgba(0, 0, 0, 0.4);
+    transform: scale(1.05);
+}
+
+.btn-edit:active {
+    transform: scale(0.98);
+}
+
 .empty-message {
     text-align: center;
     padding: 30px;

@@ -73,10 +73,43 @@ function displayCharacters(characters) {
                 <p>Age: ${char.age}</p>
             </div>
             <div class="card-actions">
+                <button class="btn-edit" onclick="editCharacter(${char.id}, '${char.name}', ${char.age})">Edit</button>
                 <button class="btn-delete" onclick="deleteCharacter(${char.id})">Delete</button>
             </div>
         </div>
     `).join('');
+}
+
+// Edit character
+function editCharacter(id, name, age) {
+    const newName = prompt('Enter new name:', name);
+    if (newName === null) return;
+    
+    const newAge = prompt('Enter new age:', age);
+    if (newAge === null) return;
+    
+    updateCharacter(id, newName, parseInt(newAge));
+}
+
+// Update character
+async function updateCharacter(id, name, age) {
+    try {
+        const response = await fetch(`${API_URL}/characters/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, age })
+        });
+        
+        if (response.ok) {
+            loadCharacters();
+            alert('Character updated!');
+        } else {
+            alert('Error updating character');
+        }
+    } catch (error) {
+        console.error('Error updating character:', error);
+        alert('Error updating character');
+    }
 }
 
 // Create character
@@ -152,10 +185,55 @@ function displayEquipment(equipment) {
                 <p>Worth: ${eq.worth} | ${eq.description}</p>
             </div>
             <div class="card-actions">
+                <button class="btn-edit" onclick="editEquipment(${eq.id}, ${eq.character_id}, '${eq.piece}', '${eq.name}', ${eq.stat}, '${eq.rarity}', ${eq.worth}, '${eq.description}')">Edit</button>
                 <button class="btn-delete" onclick="deleteEquipment(${eq.id})">Delete</button>
             </div>
         </div>
     `).join('');
+}
+
+// Edit equipment
+function editEquipment(id, charId, piece, name, stat, rarity, worth, description) {
+    const newPiece = prompt('Enter piece type:', piece);
+    if (newPiece === null) return;
+    
+    const newName = prompt('Enter equipment name:', name);
+    if (newName === null) return;
+    
+    const newStat = prompt('Enter stat value:', stat);
+    if (newStat === null) return;
+    
+    const newRarity = prompt('Enter rarity (common/uncommon/rare/epic/legendary):', rarity);
+    if (newRarity === null) return;
+    
+    const newWorth = prompt('Enter worth:', worth);
+    if (newWorth === null) return;
+    
+    const newDescription = prompt('Enter description:', description);
+    if (newDescription === null) return;
+    
+    updateEquipment(id, charId, newPiece, newName, parseInt(newStat), newRarity, parseInt(newWorth), newDescription);
+}
+
+// Update equipment
+async function updateEquipment(id, characterId, piece, name, stat, rarity, worth, description) {
+    try {
+        const response = await fetch(`${API_URL}/equipment/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ character_id: characterId, piece, name, stat, rarity, worth, description })
+        });
+        
+        if (response.ok) {
+            loadEquipment();
+            alert('Equipment updated!');
+        } else {
+            alert('Error updating equipment');
+        }
+    } catch (error) {
+        console.error('Error updating equipment:', error);
+        alert('Error updating equipment');
+    }
 }
 
 // Load characters for dropdown
