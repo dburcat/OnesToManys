@@ -323,11 +323,47 @@ function displayRelationships(characters) {
     }
     
     container.innerHTML = characters.map(char => `
-        <div class="card">
-            <div class="card-content">
-                <h4>${char.name} (Age: ${char.age})</h4>
-                <p>Equipment: ${char.equipment?.length || 0} items</p>
+        <div class="expanded-card">
+            <div class="card">
+                <div class="card-content">
+                    <h4>${char.name} (Age: ${char.age})</h4>
+                    <p>Equipment: ${char.equipment?.length || 0} items</p>
+                </div>
+                <div class="card-actions">
+                    <button class="btn-expand" onclick="toggleEquipment(${char.id})">
+                        <span class="expand-icon">▼</span> Expand
+                    </button>
+                </div>
+            </div>
+            <div class="equipment-list" id="equipment-${char.id}" style="display: none;">
+                ${char.equipment && char.equipment.length > 0 ? 
+                    char.equipment.map(eq => `
+                        <div class="equipment-item">
+                            <div class="item-content">
+                                <h5>${eq.name}</h5>
+                                <p><strong>Type:</strong> ${eq.piece} | <strong>Stat:</strong> ${eq.stat}</p>
+                                <p><strong>Rarity:</strong> ${eq.rarity} | <strong>Worth:</strong> ${eq.worth}</p>
+                                <p><strong>Description:</strong> ${eq.description}</p>
+                            </div>
+                        </div>
+                    `).join('') 
+                    : '<p class="empty-equipment">No equipment</p>'
+                }
             </div>
         </div>
     `).join('');
+}
+
+function toggleEquipment(charId) {
+    const equipmentList = document.getElementById(`equipment-${charId}`);
+    const btn = event.target.closest('.btn-expand');
+    const icon = btn.querySelector('.expand-icon');
+    
+    if (equipmentList.style.display === 'none') {
+        equipmentList.style.display = 'block';
+        icon.textContent = '▲';
+    } else {
+        equipmentList.style.display = 'none';
+        icon.textContent = '▼';
+    }
 }

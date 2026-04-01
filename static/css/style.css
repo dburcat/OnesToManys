@@ -405,6 +405,101 @@ form button:active {
     background: linear-gradient(180deg, #0088bb, #2d5a8c);
 }
 
+/* Expanded Card Styling */
+.expanded-card {
+    margin-bottom: 15px;
+}
+
+.btn-expand {
+    background: linear-gradient(135deg, #3d4e7f 0%, #5d6eaf 100%);
+    color: #7a9cc8;
+    padding: 8px 14px;
+    border: 2px solid #0088bb;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-family: 'Arial', sans-serif;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-expand:hover {
+    background: linear-gradient(135deg, #5d6eaf 0%, #7d8ecf 100%);
+    border-color: #0088bb;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(93, 110, 175, 0.4), 0 2px 4px rgba(0, 0, 0, 0.4);
+    transform: scale(1.05);
+}
+
+.expand-icon {
+    transition: transform 0.3s ease;
+}
+
+.equipment-list {
+    background: linear-gradient(135deg, #0f1f35 0%, #1a2847 100%);
+    border: 2px solid #2d5a8c;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    padding: 15px;
+    margin-top: -2px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        max-height: 1000px;
+    }
+}
+
+.equipment-item {
+    background: linear-gradient(135deg, #1a2847 0%, #2d3e5f 100%);
+    border: 1px solid #2d5a8c;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+    transition: all 0.2s ease;
+}
+
+.equipment-item:last-child {
+    margin-bottom: 0;
+}
+
+.equipment-item:hover {
+    border-color: #0088bb;
+    box-shadow: 0 0 10px rgba(0, 136, 187, 0.2);
+}
+
+.item-content h5 {
+    color: #0088bb;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+    text-transform: uppercase;
+    text-shadow: 0 0 6px rgba(0, 136, 187, 0.2);
+}
+
+.item-content p {
+    color: #7a9cc8;
+    font-size: 12px;
+    margin: 4px 0;
+}
+
+.empty-equipment {
+    text-align: center;
+    color: #2d5a8c;
+    font-size: 13px;
+    padding: 10px 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     header h1 {
